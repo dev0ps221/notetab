@@ -1,13 +1,18 @@
-<form method="post" action="/">
-    <div class="field">
-        <input type="text" name="username" placeholder="username" />
-    </div>
-    <div class="field">
-        <input type="password" name="pass" placeholder="pass" />
-    </div>
-    <div class="field">
-        <input type="hidden" name="action" value="login" />
-        <a href="#" onclick="event.preventDefault();requestView('register')">s'inscrire</a>
-        <button>connexion</button>
-    </div>
-</form>
+<section id="login">
+    <h2>
+        connexion
+    </h2>
+    <form method="post" action="/">
+        <div class="field">
+            <input type="text" name="username" placeholder="username" />
+        </div>
+        <div class="field">
+            <input type="password" name="pass" placeholder="pass" />
+        </div>
+        <div class="field">
+            <input type="hidden" name="action" value="login" />
+            <a href="#" onclick="event.preventDefault();requestView('register')">s'inscrire</a>
+            <button>connexion</button>
+        </div>
+    </form>
+</section>

@@ -1,9 +1,12 @@
+const { MongoClient } = require('mongodb');
 
-const qs = require('querystring');
+const url = 'mongodb://127.0.0.1:2727';
+const client = new MongoClient(url);
 
 const http = require('http')
 const fs = require('fs');
 const { delimiter } = require('path');
+const { match } = require('assert');
 
 const assets = {
     '/app.js':'js/app.js',
@@ -16,6 +19,12 @@ const views = {
     'login':'login.html',
     'register':'register.html'
 }
+
+let notetab = null
+let users   = null 
+let notes   = null
+
+
 function echoView(viewname){
     if(Object.keys(views).includes(viewname)){
         data = fs.readFileSync(views[viewname]).toString()
@@ -28,6 +37,7 @@ function echoAsset(assetname){
         return data
     }
 }
+
 const server = http.createServer(
     (request,response)=>{
         response.statusCode = 200
@@ -103,30 +113,48 @@ const server = http.createServer(
             return match
         }
         function processPost(fields,response){
+            let username = null
+            let password = null
             const action = matchPostField('action', fields)
             if(action){
-                if(action == 'login' || action == 'register'){
-                    let username = matchPostField('username', fields)
-                    let password = matchPostField('pass', fields)
-                }
                 switch (action){
 
                     case 'requestView':
                         const view = matchPostField('view', fields)
-                        console.log(`requested view ${view}`)
                         if(view){
                             TextResponse(response, echoView(view))
                         }
                         break;
                     case 'login':
+                        username = matchPostField('username', fields)
+                        password = matchPostField('pass', fields)
                         if(username && password){
-                            
+                            const searchData = {username,password}
+                            refreshMongoStuff()
+                            console.log(users)
+                            users.findOne( 
+                                searchData
+                                ,(e,data)=>{
+                                    console.log(data)
+                                } 
+                            )
+                           
+                        }else{
+                            console.log('missing fields')
                         }
                         break;
 
                     case 'register':
+                        refreshMongoStuff()
+                        username = matchPostField('username', fields)
+                        password = matchPostField('pass', fields)
                         if(username && password){
-                            
+                            users.insertOne({username,password}).then(data=>{
+                                const userid = (data.insertedId.toString())
+                                TextResponse(
+                                    response, cookieScript('logged',userid)
+                                )
+                            })
                         }
                         break;
             
@@ -141,9 +169,35 @@ const server = http.createServer(
         }    
     }   
 )
+function cookieScript(name,value){
+    const scriptstring = `
+        <script>
+            document.cookie = ${ name+'='+value};
+            document.location.href = '/'
+        </script>
+    `
+    console.log(scriptstring)
+    return scriptstring 
+}
+function refreshMongoStuff(){
+        
+    console.log('connected to mongodb server')
+
+
+    users = notetab.collection('users')
+
+    notes = notetab.collection('notes')
+
+    console.log('connected to notetab')
+
+}
 server.listen(
     8080,e=>{
         console.log(('server is listening on 8080'))
+
+        notetab =  client.db('notetab')
+
+        refreshMongoStuff()
 
     }
 )
