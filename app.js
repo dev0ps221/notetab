@@ -1,7 +1,13 @@
+
+const qs = require('querystring');
+
 const http = require('http')
-const fs = require('fs')
+const fs = require('fs');
+const { delimiter } = require('path');
+
 const assets = {
-    '/sess.js':'sess.js'
+    '/sess.js':'js/sess.js',
+    '/app.css':'css/app.css'
 }
 const views = {
     'home':'app.html',
@@ -21,48 +27,76 @@ function echoAsset(assetname){
         return data
     }
 }
-const server = http.createServer()
-server.listen(8080,e=>{
+const server = http.createServer(
+    (request,response)=>{
+        response.statusCode = 200
+        if(request.method.toLowerCase()=='get'){
 
-    function TextResponse(response,data){
-        response.write(data);
-        response.end();
-    }
-    function jsonResponse(response,data){
-        response.setHeader('Content-Type', 'application/json');
-        response.write(data);
-        response.end();
-        
-    }
-    function processGet(request){
-        if(request.url == '/'){
-            return echoView('home')
-        }else{
-            if(Object.keys(assets).includes(request.url)){
-                return echoAsset(request.url)
+            let reqextarr = request.url.split('.')
+            if(reqextarr[reqextarr.length-1] == 'js'){
+                response.setHeader('Content-Type', 'text/javascript');
             }
-        }
-    }
-    function processPost(request,response){
-        console.log(request)
-    }
-    server.on(
-        'request',(request,response)=>{
-            response.statusCode = 200
-            if(request.method.toLowerCase()=='get'){
 
-                let reqextarr = request.url.split('.')
-                if(reqextarr[reqextarr.length-1] == 'js'){
-                    response.setHeader('Content-Type', 'text/javascript');
+            TextResponse(response,processGet(request))
+        }
+
+        if(request.method.toLowerCase()=='post'){
+            let body = []
+            
+            request.on(
+                'data', (chunk) => {
+                    body.push(chunk);
                 }
+            )
+            request.on('end', () => {
+                body = body.toString()
+                const delim =  body.toString().split('\r\n')[0]
+                let fields = body.split(delim).filter(elem=>elem.match('form-data')).map(elem=>elem.split(';')[1].split('\r')[0].split('=')).map(([name,val])=>{return {name,val}})
+                processPost(fields,response)
+            })
 
-                TextResponse(response,processGet(request))
-            }
-            if(request.method.toLowerCase()=='post'){
-                processPost(request,response)
+        }
+
+
+        function TextResponse(response,data){
+            response.write(data);
+            response.end();
+        }
+
+        function jsonResponse(response,data){
+            response.setHeader('Content-Type', 'application/json');
+            response.write(data);
+            response.end();
+            
+        }
+
+        function processGet(request){
+            if(request.url == '/'){
+                return echoView('home')
+            }else{
+                if(Object.keys(assets).includes(request.url)){
+                    return echoAsset(request.url)
+                }
             }
         }
-    )
-    
-    console.log(('server is listening on 8080'))
-})
+
+        function matchPostField(fieldname,fields){
+            let match = null
+            fields.forEach(
+                f=>{
+                    if(f.name == fieldname) match = f
+                }
+            )
+            return match
+        }
+        function processPost(fields,response){
+            
+        }    
+    }   
+)
+server.listen(
+    8080,e=>{
+        console.log(('server is listening on 8080'))
+
+    }
+)
