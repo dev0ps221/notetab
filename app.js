@@ -51,7 +51,7 @@ const server = http.createServer(
             request.on('end', () => {
                 body = body.toString()
                 const delim =  body.toString().split('\r\n')[0]
-                let fields = body.split(delim).filter(elem=>elem.match('form-data')).map(elem=>elem.split(';')[1].split('\r')[0].split('=')).map(([name,val])=>{return {name,val}})
+                let fields = body.split(delim).filter(elem=>elem.match('form-data')).map(elem=>elem.split(';')[1].split('\r\n\r\n').map(e=>{return e.replace('name=','').replace('\r\n','').replaceAll("\"",'').trim()})).map(([name,val])=>{ return {name,val} })
                 processPost(fields,response)
             })
 
@@ -90,7 +90,23 @@ const server = http.createServer(
             return match
         }
         function processPost(fields,response){
-            
+            const action = matchPostField('action', fields)
+            if(action){
+                switch (action.val){
+
+                    case 'requestView':
+                        const view = matchPostField('view', fields)
+                        if(view){
+                            TextResponse(response, echoView(view.val))
+                        }
+                        break;
+
+
+                    default:
+                        break;
+
+                }
+            }
         }    
     }   
 )
