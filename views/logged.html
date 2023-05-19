@@ -1,0 +1,14 @@
+<html lang="en">
+<head>
+</head>
+<body>
+    <script>
+        console.log(document.location.pathname.replace('/logged/',''))
+        if(document.location.pathname.replace('/logged/','')){
+            document.cookie = `logged=${document.location.pathname.replace('/logged/','')}`
+        }
+        document.location.href = '/'
+
+    </script>
+</body>
+</html>

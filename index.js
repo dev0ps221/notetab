@@ -28,7 +28,7 @@ let notes   = null
 
 function echoView(viewname){
     if(Object.keys(views).includes(viewname)){
-        data = fs.readFileSync(views[viewname]).toString()
+        data = fs.readFileSync('views/'+views[viewname]).toString()
         return data
     }
 }
