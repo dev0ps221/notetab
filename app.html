@@ -9,25 +9,7 @@
 </head>
 <body> 
     <div class="wrapper"></div>
-    <script>
-        function requestView(view){
-            const req = new XMLHttpRequest()
-            const data = new FormData()
-            data.append(
-                'action','requestView'
-            )
-            data.append(
-                'view',view
-            )
-            req.addEventListener(
-                'load',e=>{
-                    console.log(req.response)
-                    processViewData(req.response)
-                }
-            )
-            req.open('POST','/')
-            req.send(data)
-        }
+    <script src="app.js">
     </script>
     <script src="sess.js"></script>
 </body>
