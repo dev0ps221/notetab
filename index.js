@@ -17,6 +17,7 @@ const views = {
     'home':'app.html',
     'notes':'notes.html',
     'login':'login.html',
+    'logged':'logged.html',
     'register':'register.html'
 }
 
@@ -36,6 +37,11 @@ function echoAsset(assetname){
         data = fs.readFileSync(assets[assetname]).toString()
         return data
     }
+}
+
+function redirect(response,target){
+    response.writeHead(301, { Location: target });
+    response.end();
 }
 
 const server = http.createServer(
@@ -97,8 +103,13 @@ const server = http.createServer(
                 if(Object.keys(assets).includes(request.url)){
                     return echoAsset(request.url)
                 }else{
-                    response.writeHead(301, { Location: "/" });
-                    response.end();
+                    if(request.url.match('logged')){
+                        const uriarr = request.url.replace('/',' ').trim().split('/')
+                        if(uriarr.length==2){
+                            return echoView('logged')
+                        }
+                    }
+                    redirect(response,'/')
                 }
             }
         }
@@ -151,9 +162,7 @@ const server = http.createServer(
                         if(username && password){
                             users.insertOne({username,password}).then(data=>{
                                 const userid = (data.insertedId.toString())
-                                TextResponse(
-                                    response, cookieScript('logged',userid)
-                                )
+                                redirect(response, `/logged/${userid}`)
                             })
                         }
                         break;
@@ -169,16 +178,6 @@ const server = http.createServer(
         }    
     }   
 )
-function cookieScript(name,value){
-    const scriptstring = `
-        <script>
-            document.cookie = ${ name+'='+value};
-            document.location.href = '/'
-        </script>
-    `
-    console.log(scriptstring)
-    return scriptstring 
-}
 function refreshMongoStuff(){
         
     console.log('connected to mongodb server')
