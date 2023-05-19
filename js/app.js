@@ -5,13 +5,7 @@ function processViewData(data){
 
 function requestView(view){
     const req = new XMLHttpRequest()
-    const data = new FormData()
-    data.append(
-        'action','requestView'
-    )
-    data.append(
-        'view',view
-    )
+    const data = `action=requestView&view=${view}`
     req.addEventListener(
         'load',e=>{
             console.log(req.response)

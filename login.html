@@ -1,12 +1,13 @@
-<form action="">
+<form method="post" action="/">
     <div class="field">
         <input type="text" name="username" placeholder="username" />
     </div>
     <div class="field">
-        <input type="text" name="password" placeholder="pass" />
+        <input type="password" name="pass" placeholder="pass" />
     </div>
     <div class="field">
-        <input type="hidden" name="action" placeholder="login" />
+        <input type="hidden" name="action" value="login" />
+        <a href="#" onclick="event.preventDefault();requestView('register')">s'inscrire</a>
         <button>connexion</button>
     </div>
 </form>

@@ -38,7 +38,7 @@ const server = http.createServer(
                 response.setHeader('Content-Type', 'text/javascript');
             }
 
-            TextResponse(response,processGet(request))
+            TextResponse(response,processGet(request,response))
         }
 
         if(request.method.toLowerCase()=='post'){
@@ -51,8 +51,11 @@ const server = http.createServer(
             )
             request.on('end', () => {
                 body = body.toString()
-                const delim =  body.toString().split('\r\n')[0]
-                let fields = body.split(delim).filter(elem=>elem.match('form-data')).map(elem=>elem.split(';')[1].split('\r\n\r\n').map(e=>{return e.replace('name=','').replace('\r\n','').replaceAll("\"",'').trim()})).map(([name,val])=>{ return {name,val} })
+                
+                
+                // const delim =  body.toString().split('\r\n')[0]
+                // let fields = body.split(delim).filter(elem=>elem.match('form-data')).map(elem=>elem.split(';')[1].split('\r\n\r\n').map(e=>{return e.replace('name=','').replace('\r\n','').replaceAll("\"",'').trim()})).map(([name,val])=>{ return {name,val} })
+                let fields = body.split('&').map(e=>e.split('=')).map(([name,val])=>{return {name,val}})
                 processPost(fields,response)
             })
 
@@ -60,8 +63,14 @@ const server = http.createServer(
 
 
         function TextResponse(response,data){
-            response.write(data);
-            response.end();
+            try{
+                if(data){
+                    response.write(data)
+                    response.end();
+                }
+            }catch(e){
+                console.log(e)
+            }
         }
 
         function jsonResponse(response,data){
@@ -77,6 +86,9 @@ const server = http.createServer(
             }else{
                 if(Object.keys(assets).includes(request.url)){
                     return echoAsset(request.url)
+                }else{
+                    response.writeHead(301, { Location: "/" });
+                    response.end();
                 }
             }
         }
@@ -85,7 +97,7 @@ const server = http.createServer(
             let match = null
             fields.forEach(
                 f=>{
-                    if(f.name == fieldname) match = f
+                    if(f.name == fieldname) match = f.val
                 }
             )
             return match
@@ -93,18 +105,35 @@ const server = http.createServer(
         function processPost(fields,response){
             const action = matchPostField('action', fields)
             if(action){
-                switch (action.val){
+                if(action == 'login' || action == 'register'){
+                    let username = matchPostField('username', fields)
+                    let password = matchPostField('pass', fields)
+                }
+                switch (action){
 
                     case 'requestView':
                         const view = matchPostField('view', fields)
+                        console.log(`requested view ${view}`)
                         if(view){
-                            TextResponse(response, echoView(view.val))
+                            TextResponse(response, echoView(view))
+                        }
+                        break;
+                    case 'login':
+                        if(username && password){
+                            
                         }
                         break;
 
-
+                    case 'register':
+                        if(username && password){
+                            
+                        }
+                        break;
+            
                     default:
                         console.log('unrecognized action')
+                        console.log(action)
+                        TextResponse(response, 'unrecognized action')
                         break;
 
                 }
